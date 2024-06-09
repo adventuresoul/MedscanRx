@@ -49,7 +49,6 @@ async def getTextFromImage(id: str, background_tasks: BackgroundTasks):
     try:
         extracted_text = extractTextFromImage(file_path)
         cleaned_text = removeStopWords(extracted_text)
-        # what are these?
         #background_tasks.add_task(cleanup_file, file_path)
         return {"extracted_text": cleaned_text}
     
