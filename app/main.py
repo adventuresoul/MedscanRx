@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
-from app.routers import ocr
+from app.routers import ocr, user, auth
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -15,6 +15,8 @@ app.add_middleware(
 )
 
 app.include_router(ocr.router)
+app.include_router(user.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def root():
