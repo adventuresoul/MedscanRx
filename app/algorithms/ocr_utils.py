@@ -1,15 +1,18 @@
 import easyocr
 from app.schemas import FilePath
+from app.algorithms.imgProc_utils import ImagePreprocesser
 
 # create an instance of easyocr with supported lang = en and gpu = True[optional]
-reader = easyocr.Reader(['en'], gpu=False)
+reader = easyocr.Reader(['en'], gpu=True)
 
 
 def processImage(img_file_path: FilePath):
     """
         doesn't returns the processed image, inplace operation
     """
-    pass
+    obj = ImagePreprocesser(img_file_path)
+    obj.processImage()
+    
 
 def extractTextFromImage(img_file_path: FilePath):
     """
@@ -18,7 +21,6 @@ def extractTextFromImage(img_file_path: FilePath):
         return: list of strings
     """
     result = reader.readtext(img_file_path)
-    # do the processing for returning only words not numbers such as co-ordinates
     words = []
     for ext in result:
         words.append(ext[1])

@@ -1,34 +1,61 @@
 import requests
 
-# Define the base URL for the OpenFDA drug endpoint
-base_url = "https://api.fda.gov/drug/label.json"
+def search_drugs(pattern):
+    endpoint = "https://api.fda.gov/drug/label.json"
+    params = {
+        "search": f"openfda.brand_name:{pattern}* OR openfda.generic_name:{pattern}*",
+        "limit": 10  # Adjust as needed
+    }
+    response = requests.get(endpoint, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        return data["results"]
+    else:
+        return []
 
-# Define the parameters for the query
-params = {
-    "search": "ibuprofen",  # The drug name you want to search for
-    "limit": 1              # Limit the number of results to 1 for simplicity
-}
+def get_drug_info(drug_id):
+    endpoint = f"https://api.fda.gov/drug/label.json?search=set_id:{drug_id}"
+    response = requests.get(endpoint)
+    if response.status_code == 200:
+        data = response.json()
+        return data["results"][0] if data["results"] else None
+    else:
+        return None
 
-# Make the GET request to the OpenFDA API
-response = requests.get(base_url, params=params)
+# Example batch of words extracted from OCR
+words_batch =  [
+        "Ixlu",
+        "Capouls",
+        "Calcitriol",
+        "Capsules",
+        "Bonerise"
+    ]
 
-# Check if the request was successful
-if response.status_code == 200:
-    # Parse the JSON response
-    data = response.json()
-    # Print the result
-    # print(data)
-else:
-    print(f"Error: {response.status_code}")
+res = []
+for word in words_batch:
+    drugs = search_drugs(word)
+    if drugs:
+        for drug in drugs:
+            drug_info = get_drug_info(drug["set_id"])
+            if drug_info:
+                prod = {}
+                prod["Drug name"] = drug_info['openfda'].get('brand_name', ['Unknown'])[0]
+                prod["Generic name"] = drug_info['openfda'].get('generic_name', ['Unknown'])[0]
+                prod["Manufacturer"] = drug_info['openfda'].get('manufacturer_name', ['Unknown'])[0]
+                if 'adverse_reactions' in drug_info:
+                    prod["Side effects"] = drug_info['adverse_reactions']
+                else:
+                    prod["Side effects"] = "Not available"
+                res.append(prod)
 
-print(len(data['results']))
-if "results" in data and len(data["results"]) > 0:
-    for result in data['results']:
-        print(f"Drug Name: {result.get('openfda', {}).get('brand_name', 'N/A')}")
-        print(f"spl_product_data_elements: {result.get("spl_product_data_elements", "N/A")}")
-        print("-" * 50)
-        print(f"Purpose: {result.get('purpose', 'N/A')}")
-        print("-" * 50)
-        #print(f"Warnings: {result.get('warnings', 'N/A')}")
-else:
-    print("No results found.")
+for item in res:
+    print(f"Drug Name: {item['Drug name']}")
+    print(f"Generic Name: {item['Generic name']}")
+    print(f"Manufacturer: {item['Manufacturer']}")
+    print("Side Effects:")
+    if isinstance(item['Side effects'], list):
+        for effect in item['Side effects']:
+            print(f"- {effect}")
+    else:
+        print(item['Side effects'])
+    print("---")

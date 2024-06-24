@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 from app.OAuth import create_access_token
-from app.utils import validate
+from app.passowrdUtils import validate
 from app.schemas import UserLogin, Token
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 
@@ -17,6 +17,7 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == user_credentials.email).first()
     # if user doesn't exists, raise Http Error
     if not user:
+        # sign up logic --
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
     # check the password
     # print(user_credentials.password, user.password)

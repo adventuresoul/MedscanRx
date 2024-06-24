@@ -30,3 +30,13 @@ class User(UserBase):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+# Token Model
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# Messages
+class Message(BaseModel):
+    message: str

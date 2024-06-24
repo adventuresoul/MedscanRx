@@ -1,8 +1,10 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, status, BackgroundTasks
-from app.utils.ocr_utils import processImage, extractTextFromImage
-from app.utils.nlp_utils import removeStopWords
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, BackgroundTasks, Depends
+from app.algorithms.ocr_utils import processImage, extractTextFromImage, processImage
+from app.algorithms.nlp_utils import removeStopWords
+from app.OAuth import get_current_user
 from uuid import uuid4
 import os
+
 
 # Ensure the directory exists
 os.makedirs("static", exist_ok=True)
@@ -15,7 +17,7 @@ router = APIRouter(
 
 # Route to upload the file to the server
 @router.post("/upload", status_code=status.HTTP_202_ACCEPTED)
-async def uploadFile(file: UploadFile = File(...)):
+async def uploadFile(file: UploadFile = File(...), current_user = Depends(get_current_user)):
     contents = await file.read()
     file_id = str(uuid4())
     file_ext = os.path.splitext(file.filename)[1]  # Get the file extension
@@ -39,7 +41,7 @@ async def uploadFile(file: UploadFile = File(...)):
 
 # Router to process the image and extract text
 @router.post("/result/{id}", status_code=status.HTTP_200_OK)
-async def getTextFromImage(id: str, background_tasks: BackgroundTasks):
+async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_user = Depends(get_current_user)):
     file_name = f"{id}.jpg"  # Assuming only JPG files are handled
     file_path = os.path.join(IMAGEDIR, file_name)
 
@@ -47,9 +49,10 @@ async def getTextFromImage(id: str, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     
     try:
+        processImage(file_path)
         extracted_text = extractTextFromImage(file_path)
         cleaned_text = removeStopWords(extracted_text)
-        #background_tasks.add_task(cleanup_file, file_path)
+        background_tasks.add_task(cleanup_file, file_path)
         return {"extracted_text": cleaned_text}
     
     except Exception as e:
