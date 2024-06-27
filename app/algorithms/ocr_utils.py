@@ -20,6 +20,7 @@ def extractTextFromImage(img_file_path: FilePath):
         args: img_file_path
         return: list of strings
     """
+    #print("I am inside extract Text from Image")
     result = reader.readtext(img_file_path)
     words = []
     for ext in result:

@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, status, Backgrou
 from app.algorithms.ocr_utils import processImage, extractTextFromImage, processImage
 from app.algorithms.nlp_utils import removeStopWords
 from app.OAuth import get_current_user
+from app import schemas
 from uuid import uuid4
 import os
 
@@ -31,16 +32,17 @@ async def uploadFile(file: UploadFile = File(...), current_user = Depends(get_cu
         file_path = os.path.join(IMAGEDIR, file_name)
         with open(file_path, "wb") as f:
             f.write(contents)
-        
-        return {"file_id": file_id, "file_name": file_name}
+        return {"file_id": str(file_id), "file_name": file_name}
+    
     except OSError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+    
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error occurred")
 
 
 # Router to process the image and extract text
-@router.post("/result/{id}", status_code=status.HTTP_200_OK)
+@router.post("/result/{id}",status_code=status.HTTP_200_OK)
 async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_user = Depends(get_current_user)):
     file_name = f"{id}.jpg"  # Assuming only JPG files are handled
     file_path = os.path.join(IMAGEDIR, file_name)
@@ -52,7 +54,7 @@ async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_u
         processImage(file_path)
         extracted_text = extractTextFromImage(file_path)
         cleaned_text = removeStopWords(extracted_text)
-        background_tasks.add_task(cleanup_file, file_path)
+        #background_tasks.add_task(cleanup_file, file_path)
         return {"extracted_text": cleaned_text}
     
     except Exception as e:
