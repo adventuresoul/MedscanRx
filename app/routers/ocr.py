@@ -1,11 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, BackgroundTasks, Depends
-from app.algorithms.ocr_utils import processImage, extractTextFromImage, processImage
-from app.algorithms.nlp_utils import removeStopWords
+from app.algorithm_utils.ocr_utils import processImage, extractTextFromImage
 from app.OAuth import get_current_user
+from app.algorithm_utils import nlp_utils
 from app import schemas
 from uuid import uuid4
 import os
-
 
 # Ensure the directory exists
 os.makedirs("static", exist_ok=True)
@@ -17,8 +16,22 @@ router = APIRouter(
 )
 
 # Route to upload the file to the server
-@router.post("/upload", status_code=status.HTTP_202_ACCEPTED)
-async def uploadFile(file: UploadFile = File(...), current_user = Depends(get_current_user)):
+@router.post("/files", status_code=status.HTTP_202_ACCEPTED)
+async def uploadFile(file: UploadFile = File(...), current_user=Depends(get_current_user)):
+    """
+    Upload a file to the server.
+
+    - **file**: The file to be uploaded.
+    - **current_user**: The currently authenticated user.
+
+    Returns:
+    - JSON response containing `file_id` and `file_name` if the upload is successful.
+
+    Raises:
+    - HTTP 400: If the file type is not supported.
+    - HTTP 422: If there is an issue processing the file.
+    - HTTP 500: If an unexpected error occurs on the server.
+    """
     contents = await file.read()
     file_id = str(uuid4())
     file_ext = os.path.splitext(file.filename)[1]  # Get the file extension
@@ -32,7 +45,7 @@ async def uploadFile(file: UploadFile = File(...), current_user = Depends(get_cu
         file_path = os.path.join(IMAGEDIR, file_name)
         with open(file_path, "wb") as f:
             f.write(contents)
-        return {"file_id": str(file_id), "file_name": file_name}
+        return {"file_id": file_id, "file_name": file_name}
     
     except OSError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
@@ -41,9 +54,23 @@ async def uploadFile(file: UploadFile = File(...), current_user = Depends(get_cu
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error occurred")
 
 
-# Router to process the image and extract text
-@router.post("/result/{id}",status_code=status.HTTP_200_OK)
-async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_user = Depends(get_current_user)):
+# Route to process the image and extract text
+@router.post("/files/{id}/text", status_code=status.HTTP_200_OK)
+async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_user=Depends(get_current_user)):
+    """
+    Extract text from an uploaded image file.
+
+    - **id**: The unique identifier of the file.
+    - **background_tasks**: Background tasks for asynchronous operations.
+    - **current_user**: The currently authenticated user.
+
+    Returns:
+    - JSON response containing `extracted_text` if the extraction is successful.
+
+    Raises:
+    - HTTP 404: If the file is not found on the server.
+    - HTTP 500: If an error occurs during text extraction.
+    """
     file_name = f"{id}.jpg"  # Assuming only JPG files are handled
     file_path = os.path.join(IMAGEDIR, file_name)
 
@@ -53,17 +80,22 @@ async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_u
     try:
         processImage(file_path)
         extracted_text = extractTextFromImage(file_path)
-        cleaned_text = removeStopWords(extracted_text)
+        transformed_words = nlp_utils.removeStopWords(extracted_text)
         #background_tasks.add_task(cleanup_file, file_path)
-        return {"extracted_text": cleaned_text}
+        return {"extracted_text": extracted_text}
     
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error processing the image")
 
 
-# a process to clean up the image after extracting the text
+# A process to clean up the image after extracting the text
 def cleanup_file(file_path: str):
+    """
+    Remove the file from the server.
+
+    - **file_path**: The path to the file to be removed.
+    """
     try:
         os.remove(file_path)
-    except OSError as e:
+    except OSError:
         pass

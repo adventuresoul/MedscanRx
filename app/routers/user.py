@@ -13,10 +13,19 @@ router = APIRouter(
 )
 
 ### Users route
-@router.get("/", response_model=List[schemas.UserBase])
+@router.get("", response_model=List[schemas.UserBase])
 async def get_users(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     """
-    Returns the list of all registered users of the application.
+    Retrieve all registered users.
+
+    - **db**: The database session.
+    - **current_user**: The currently authenticated user.
+
+    Returns:
+    - List of all users.
+
+    Raises:
+    - HTTP 401: If the current user is not the admin.
     """
     if current_user.email != admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User doesn't have permission to view")
@@ -25,7 +34,7 @@ async def get_users(db: Session = Depends(get_db), current_user=Depends(get_curr
     return users
 
 # Create a user
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Message)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=schemas.Message)
 async def create_user(
     username: str = Form(...),
     email: str = Form(...),
@@ -34,7 +43,19 @@ async def create_user(
     db: Session = Depends(get_db)
 ):
     """
-    Creates a new user.
+    Create a new user.
+
+    - **username**: The username of the new user.
+    - **email**: The email of the new user.
+    - **contact**: The contact number of the new user.
+    - **password**: The password of the new user.
+    - **db**: The database session.
+
+    Returns:
+    - A message confirming user creation.
+
+    Raises:
+    - HTTP 409: If the user already exists.
     """
     hashed_pass = passwordUtils.password_hash(password)
     new_user = models.User(username=username, email=email, phone=contact, password=hashed_pass)
@@ -50,10 +71,21 @@ async def create_user(
     return {"message": "New user created successfully"}
 
 # Query a user
-@router.get("/user", response_model=schemas.User)
+@router.get("/id", response_model=schemas.User)
 async def get_user(id: str = Form(...), db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     """
-    Retrieves a specific user by ID. Only admin can access this.
+    Retrieve a specific user by ID. Only accessible by admin.
+
+    - **id**: The unique identifier of the user.
+    - **db**: The database session.
+    - **current_user**: The currently authenticated user.
+
+    Returns:
+    - The user's details.
+
+    Raises:
+    - HTTP 401: If the current user is not the admin.
+    - HTTP 404: If the user is not found.
     """
     if current_user.email != admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User doesn't have permission to view")
@@ -65,10 +97,19 @@ async def get_user(id: str = Form(...), db: Session = Depends(get_db), current_u
     return user
 
 # Check if a user exists
-@router.post("/check", status_code=status.HTTP_200_OK)
+@router.post("/check-existance", status_code=status.HTTP_200_OK)
 async def check_user(email: str = Form(...), db: Session = Depends(get_db)):
     """
-    Checks if a user with the given email exists.
+    Check if a user with the given email exists.
+
+    - **email**: The email to check.
+    - **db**: The database session.
+
+    Returns:
+    - A message confirming the user's existence.
+
+    Raises:
+    - HTTP 404: If the user is not found.
     """
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
@@ -87,7 +128,20 @@ async def update_user_profile(
     current_user=Depends(get_current_user)
 ):
     """
-    Updates the current user's profile.
+    Update the current user's profile.
+
+    - **username**: The new username.
+    - **new_email**: The new email.
+    - **new_contact**: The new contact number.
+    - **new_password**: The new password.
+    - **db**: The database session.
+    - **current_user**: The currently authenticated user.
+
+    Returns:
+    - A message confirming the profile update.
+
+    Raises:
+    - HTTP 404: If the user is not found.
     """
     user = db.query(models.User).filter(models.User.id == current_user.id).first()
     if not user:
@@ -107,10 +161,20 @@ async def update_user_profile(
     return {"message": "User's profile updated successfully"}
 
 # Forgot password
-@router.post("/reset_password", status_code=status.HTTP_200_OK, response_model=schemas.Message)
+@router.post("/reset-password", status_code=status.HTTP_200_OK, response_model=schemas.Message)
 async def reset_password(email: str = Form(...), new_password: str = Form(...), db: Session = Depends(get_db)):
     """
-    Resets the user's password.
+    Reset a user's password.
+
+    - **email**: The email of the user.
+    - **new_password**: The new password.
+    - **db**: The database session.
+
+    Returns:
+    - A message confirming the password reset.
+
+    Raises:
+    - HTTP 404: If the user is not found.
     """
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
@@ -123,10 +187,21 @@ async def reset_password(email: str = Form(...), new_password: str = Form(...), 
     return {"message": "User's password updated successfully"}
 
 # Delete a user
-@router.delete("/", status_code=status.HTTP_200_OK, response_model=schemas.Message)
-async def delete_user(email: str = Form(...), db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+@router.delete("", status_code=status.HTTP_200_OK, response_model=schemas.Message)
+async def delete_user(email: str = Form(...), db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     """
-    Deletes a user. Only admin can perform this action.
+    Delete a user. Only accessible by admin.
+
+    - **email**: The email of the user to be deleted.
+    - **db**: The database session.
+    - **current_user**: The currently authenticated user.
+
+    Returns:
+    - A message confirming the user's deletion.
+
+    Raises:
+    - HTTP 401: If the current user is not the admin.
+    - HTTP 404: If the user is not found.
     """
     if current_user.email != admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Method forbidden")
