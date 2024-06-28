@@ -45,12 +45,9 @@ def removeStopWords(data: str) -> list:
     logger.info(f"Original words list: {words_list}")
     
     # Filter out the stop words, common English words, non-alphabetic tokens, and short words
-    wordsFiltered = [w for w in words_list if w.lower() not in stopWords and w.lower() not in commonWords and w.isalpha()]
+    wordsFiltered = [w for w in words_list if w.lower() not in stopWords and w.isalpha()]
     
     logger.info(f"Filtered words list: {wordsFiltered}")
     return wordsFiltered
 
-# Example usage:
-# text = "This is a sample text to demonstrate the removal of stopwords and common words."
-# filtered_words = removeStopWords(text)
-# print(filtered_words)
+

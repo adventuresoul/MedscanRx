@@ -3,6 +3,7 @@ from app.algorithm_utils.ocr_utils import processImage, extractTextFromImage
 from app.OAuth import get_current_user
 from app.algorithm_utils import nlp_utils
 from app import schemas
+from app.algorithm_utils import dbCall
 from uuid import uuid4
 import os
 
@@ -80,12 +81,23 @@ async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_u
     try:
         processImage(file_path)
         extracted_text = extractTextFromImage(file_path)
-        transformed_words = nlp_utils.removeStopWords(extracted_text)
+        transformed_words = nlp_utils.removeStopWords(' '.join(extracted_text))
         #background_tasks.add_task(cleanup_file, file_path)
-        return {"extracted_text": extracted_text}
+        adverse_effects_list = []
+
+        # Fetch adverse effects for each word in transformed_words
+        for word in transformed_words:
+            adverse_effects = await dbCall.fetch_adverse_effects(word)
+            if adverse_effects:
+                adverse_effects_list.append(adverse_effects)
+
+        # Add the task to clean up the file in background
+        # background_tasks.add_task(cleanup_file, file_path)
+        return {"Effects": adverse_effects_list}
     
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error processing the image")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
 
 
 # A process to clean up the image after extracting the text
