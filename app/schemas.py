@@ -11,7 +11,7 @@ class UserBase(BaseModel):
     email: EmailStr
     phone: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # request model
 class UserCreate(UserBase):
@@ -24,7 +24,7 @@ class UpdateUser(UserBase):
 # response model
 class User(UserBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Login model
 class UserLogin(BaseModel):
