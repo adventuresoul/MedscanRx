@@ -5,4 +5,4 @@ Features
 * Image Scanning and OCR: Scan medication labels and prescriptions for accurate information retrieval.
 * Drug Database Integration: Retrieve detailed information about medications from a comprehensive drug database.
 * REST API endpoints developed using FastAPI
-* User authentication through tokens.
+* User authentication through JWT token.
