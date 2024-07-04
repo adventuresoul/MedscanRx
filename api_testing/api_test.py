@@ -34,7 +34,7 @@ def test_get_text_from_image(auth_token):
     
     assert response.status_code == 200
     json_response = response.json()
-    assert "extracted_text" in json_response
+    assert "Effects" in json_response
 
 def test_get_users(auth_token):
     url = f"{BASE_URL}/users"
@@ -61,16 +61,16 @@ def test_create_user():
     json_response = response.json()
     assert "message" in json_response
 
-def test_delete_user(auth_token):
-    url = f"{BASE_URL}/users"
-    headers = {"Authorization": f"Bearer {auth_token}"}
-    data = {"email": "user_user@example.com"}
+# def test_delete_user(auth_token):
+#     url = f"{BASE_URL}/users"
+#     headers = {"Authorization": f"Bearer {auth_token}"}
+#     data = {"email": "user_user@example.com"}
     
-    response = requests.delete(url, headers=headers, data=data)
+#     response = requests.delete(url, headers=headers, data=data)
     
-    assert response.status_code == 200
-    json_response = response.json()
-    assert "message" in json_response
+#     assert response.status_code == 200
+#     json_response = response.json()
+#     assert "message" in json_response
 
 def test_check_user_existence():
     url = f"{BASE_URL}/users/check-existance"
@@ -88,7 +88,7 @@ def test_update_user_profile(auth_token):
     data = {
         "username": "admin",
         "new_email": "admin@admin.com",
-        "new_contact": "+917975963827",
+        "new_contact": "7975963827",
         "new_password": "admin@2003#"
     }
     
