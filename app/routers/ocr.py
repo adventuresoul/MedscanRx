@@ -92,7 +92,7 @@ async def getTextFromImage(id: str, background_tasks: BackgroundTasks, current_u
                 adverse_effects_list.append(adverse_effects)
 
         # Add the task to clean up the file in background
-        background_tasks.add_task(cleanup_file, file_path)
+        #background_tasks.add_task(cleanup_file, file_path)
         return {"Effects": adverse_effects_list}
     
     except Exception as e:

@@ -27,7 +27,7 @@ async def get_users(db: Session = Depends(get_db), current_user=Depends(get_curr
     Raises:
     - HTTP 401: If the current user is not the admin.
     """
-    if current_user.email != admin:
+    if current_user.username != "admin":    # when pushing to production change this to env variable
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User doesn't have permission to view")
 
     users = db.query(models.User).all()
@@ -87,7 +87,7 @@ async def get_user(id: str = Form(...), db: Session = Depends(get_db), current_u
     - HTTP 401: If the current user is not the admin.
     - HTTP 404: If the user is not found.
     """
-    if current_user.email != admin:
+    if current_user.username != "admin":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User doesn't have permission to view")
     
     user = db.query(models.User).filter(models.User.id == id).first()
@@ -125,7 +125,7 @@ async def update_user_profile(
     new_contact: str = Form(None),
     new_password: str = Form(None), 
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """
     Update the current user's profile.
@@ -203,7 +203,7 @@ async def delete_user(email: str = Form(...), db: Session = Depends(get_db), cur
     - HTTP 401: If the current user is not the admin.
     - HTTP 404: If the user is not found.
     """
-    if current_user.email != admin:
+    if current_user.username != "admin":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Method forbidden")
 
     user = db.query(models.User).filter(models.User.email == email).first()
