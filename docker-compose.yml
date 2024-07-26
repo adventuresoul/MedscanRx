@@ -4,11 +4,11 @@ services:
     ports:
       - 8000:8000
     environment:
-      - name=postgres
-      - password=Niecsevinay100.
-      - ip=localhost
-      - db=medscanRx
-      - secret_key=9WDVD9ERGE4R5G6R6JN6OP6Q3X3Z6JK6LP6UI6H6B5
+      - name=*****
+      - password=******
+      - ip=*****
+      - db=******
+      - secret_key=*****
       - algorithm=HS256
-      - admin=admin@admin.com
-      - openfdakey=5KomBc8KSNQUKyOirgLFH6Dc2Wd6wIfcg6JohJdx
+      - admin=*****
+      - openfdakey=*****
